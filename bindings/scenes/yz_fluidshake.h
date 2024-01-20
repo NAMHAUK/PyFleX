@@ -89,7 +89,7 @@ public:
 		// draw options		
 		g_drawPoints = true;
 		g_drawMesh = false;
-		g_drawEllipsoids = false;
+		g_drawEllipsoids = true;
 		g_drawDiffuse = true;
 	}
 

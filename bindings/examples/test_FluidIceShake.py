@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 
 dt = 1. / 60.
 
-time_step = 300
+time_step = 600
 time_step_rest = 30
 dim_position = 4
 dim_velocity = 3
@@ -117,14 +117,18 @@ sx_r = rand_float(0.2, 0.399)
 sy_r = rand_float(0.2, 0.399)
 # sx_r = 0.2
 # sy_r = 0.2
+#sz_r = 0.15
 sz_r = 0.15
 px_r = x_center - sx_r / 2.
 py_r = py_f + sy_f * 0.052
 pz_r = -sz_r / 2.
 
+cohesion = 0.2
+suface = 0.001
 scene_params = np.array([
     px_f, py_f, pz_f, sx_f, sy_f, sz_f,
     px_r, py_r, pz_r, sx_r, sy_r, sz_r,
+    cohesion, suface,
     box_dis_x, box_dis_z])
 
 print("scene_params", scene_params)
@@ -174,6 +178,7 @@ for i in range(time_step):
     shape_states[i] = pyflex.get_shape_states().reshape(-1, dim_shape_state)
 
     if i == 0:
+        #print(positions[i])
         print(np.min(positions[i], 0), np.max(positions[i], 0))
         print(x_box, box_dis_x, box_dis_z)
 

@@ -166,6 +166,10 @@ struct SimBuffers {
     NvFlexVector<Vec4> diffuseVelocities;
     NvFlexVector<int> diffuseCount;
 
+    // my param
+    NvFlexVector<int> connectSpringIndexs;
+    //
+
     NvFlexVector<int> activeIndices;
 
     // convexes
@@ -207,7 +211,7 @@ struct SimBuffers {
     SimBuffers(NvFlexLibrary* l) :
         positions(l), restPositions(l), velocities(l), phases(l), densities(l),
         anisotropy1(l), anisotropy2(l), anisotropy3(l), normals(l), smoothPositions(l),
-        diffusePositions(l), diffuseVelocities(l), diffuseCount(l), activeIndices(l),
+        diffusePositions(l), diffuseVelocities(l), diffuseCount(l), connectSpringIndexs(l), activeIndices(l),
         shapeGeometry(l), shapePositions(l), shapeRotations(l), shapePrevPositions(l),
         shapePrevRotations(l),    shapeFlags(l), rigidOffsets(l), rigidIndices(l), rigidMeshSize(l),
         rigidCoefficients(l), rigidPlasticThresholds(l), rigidPlasticCreeps(l), rigidRotations(l), rigidTranslations(l),
@@ -269,6 +273,9 @@ void MapBuffers(SimBuffers* buffers) {
     buffers->triangles.map();
     buffers->triangleNormals.map();
     buffers->uvs.map();
+
+    // my params
+    buffers->connectSpringIndexs.map();
 }
 
 void UnmapBuffers(SimBuffers* buffers) {
@@ -324,6 +331,9 @@ void UnmapBuffers(SimBuffers* buffers) {
     buffers->triangles.unmap();
     buffers->triangleNormals.unmap();
     buffers->uvs.unmap();
+
+    // my param
+    buffers->connectSpringIndexs.unmap();
 
 }
 
@@ -384,6 +394,9 @@ void DestroyBuffers(SimBuffers* buffers) {
     buffers->triangles.destroy();
     buffers->triangleNormals.destroy();
     buffers->uvs.destroy();
+
+    // my param
+    buffers->connectSpringIndexs.destroy();
 
     delete buffers;
 }
@@ -447,6 +460,8 @@ bool g_drawRopes;
 float g_pointScale;
 float g_ropeScale;
 float g_drawPlaneBias;    // move planes along their normal for rendering
+bool g_drawRender = true;
+
 
 float g_diffuseScale;
 float g_diffuseMotionScale;
@@ -568,6 +583,8 @@ void Init(int scene, py::array_t<float> scene_params, bool centerCamera = true, 
     // map during initialization
     MapBuffers(g_buffers);
 
+    g_buffers->connectSpringIndexs.resize(0);
+    
     g_buffers->positions.resize(0);
     g_buffers->velocities.resize(0);
     g_buffers->phases.resize(0);
@@ -857,6 +874,8 @@ void Init(int scene, py::array_t<float> scene_params, bool centerCamera = true, 
     g_buffers->anisotropy1.resize(maxParticles);
     g_buffers->anisotropy2.resize(maxParticles);
     g_buffers->anisotropy3.resize(maxParticles);
+
+    g_buffers->connectSpringIndexs.resize(maxParticles);
 
     // save rest positions
     g_buffers->restPositions.resize(g_buffers->positions.size());
@@ -1946,8 +1965,10 @@ void UpdateFrame(py::array_t<float> update_params) {
     StartFrame(Vec4(g_clearColor, 1.0f));
 
     // main scene render
-    RenderScene();
-    RenderDebug();
+    if(g_drawRender){
+        RenderScene();
+        RenderDebug();
+    }
 
     int newScene = DoUI();
 
@@ -2444,6 +2465,24 @@ void pyflex_init() {
     g_scenes.push_back(new yz_BoxBathExt("Box Bath Extension", true));
     g_scenes.push_back(new yz_FluidIceShake("Fluid Ice Shake"));
 
+    g_scenes.push_back(new my_scene("my_scene"));
+    // g_scenes.push_back(new FlagCloth("Flag Cloth"));
+    // //----------test----------------
+    // make_path(bunny_path, "/data/bunny.ply");
+    // myscene::Instance plasticbunny(bunny_path);
+    // plasticbunny.mScale = Vec3(10.0f);
+    // plasticbunny.mClusterSpacing = 1.0f;
+    // plasticbunny.mClusterRadius = 0.0f;
+    // plasticbunny.mClusterStiffness = 0.0f;
+    // plasticbunny.mGlobalStiffness = 1.0f;
+    // plasticbunny.mClusterPlasticThreshold = 0.0015f;
+    // plasticbunny.mClusterPlasticCreep = 0.15f;
+    // plasticbunny.mTranslation.y = 5.0f;
+    // auto *plasticBunniesSceneNew = new myscene("Plastic Bunnies");
+    // plasticBunniesSceneNew->mPlinth = true;
+    // plasticBunniesSceneNew->AddStack(plasticbunny, 1, 10, 1, true);
+    // g_scenes.push_back(plasticBunniesSceneNew);
+    //
     /*
     // opening scene
     g_scenes.push_back(new PotPourri("Pot Pourri"));
@@ -2854,6 +2893,10 @@ float rand_float(float LO, float HI) {
     return LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX/(HI-LO)));
 }
 
+void pyflex_spring_update(float springlength, int springindex){
+    g_buffers->springLengths[springindex] = springlength;
+}
+
 void pyflex_set_scene(int scene_idx, py::array_t<float> scene_params, int thread_idx = 0) {
     g_scene = scene_idx;
     g_selectedScene = g_scene;
@@ -3078,6 +3121,13 @@ int pyflex_get_n_rigids() {
     g_buffers->rigidRotations.unmap();
     return n_rigids;
 }
+
+// void pyflex_get_n_rigids(float springlength, int springindex) {
+//     g_buffers->springLengths.map();
+//     g_buffers->springLengths[springindex] = springlength;
+//     //printf("%f\n", g_buffers->springLengths[springindex]);
+//     g_buffers->springLengths.unmap();
+// }
 
 py::array_t<float> pyflex_get_rigidRotations() {
     g_buffers->rigidRotations.map();
@@ -3326,8 +3376,11 @@ void pyflex_render(int capture, char *path) {
     StartFrame(Vec4(g_clearColor, 1.0f));
 
     // main scene render
-    RenderScene();
-    RenderDebug();
+    if(g_drawRender){
+        RenderScene();
+        RenderDebug();
+    }
+    
 
     int newScene = DoUI();
 
@@ -3487,4 +3540,6 @@ PYBIND11_MODULE(pyflex, m) {
 
     m.def("get_scene_upper", &pyflex_get_sceneUpper);
     m.def("get_scene_lower", &pyflex_get_sceneLower);
+
+    //m.def("pyflex_spring_update", &pyflex_spring_update);
 }

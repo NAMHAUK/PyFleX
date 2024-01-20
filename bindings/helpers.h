@@ -105,6 +105,8 @@ void CreateParticleGrid(Vec3 lower, int dimx, int dimy, int dimz, float radius, 
 	}
 }
 
+
+
 void CreateParticleSphere(Vec3 center, int dim, float radius, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, float jitter=0.005f)
 {
 	if (rigid && g_buffers->rigidIndices.empty())
@@ -147,11 +149,10 @@ void CreateSpring(int i, int j, float stiffness, float give=0.0f)
 	g_buffers->springIndices.push_back(i);
 	g_buffers->springIndices.push_back(j);
 	g_buffers->springLengths.push_back((1.0f+give)*Length(Vec3(g_buffers->positions[i])-Vec3(g_buffers->positions[j])));
-	g_buffers->springStiffness.push_back(stiffness);	
+	g_buffers->springStiffness.push_back(stiffness);
 }
 
-
-void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rotation, float spacing, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, bool skin, float jitter=0.005f, Vec3 skinOffset=0.0f, float skinExpand=0.0f, Vec4 color=Vec4(0.0f), float springStiffness=0.0f)
+void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rotation, float spacing, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, bool skin, float jitter=0.005f, Vec3 skinOffset=0.0f, float skinExpand=0.0f, Vec4 color=Vec4(0.0f), float springStiffness=0.001f)
 {
 	if (rigid && g_buffers->rigidIndices.empty())
 		g_buffers->rigidOffsets.push_back(0);
@@ -164,7 +165,7 @@ void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rota
 	mesh.AddMesh(*srcMesh);
 
 	int startIndex = int(g_buffers->positions.size());
-
+	
 	{
 		mesh.Transform(RotationMatrix(rotation, Vec3(0.0f, 1.0f, 0.0f)));
 
@@ -220,6 +221,11 @@ void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rota
 		vector<float> sdf(maxDim*maxDim*maxDim);
 		MakeSDF(&voxels[0], maxDim, maxDim, maxDim, &sdf[0]);
 
+		// for spring(my param)
+		int chkindex1 = int(0.5*maxDim)*maxDim*maxDim + int(0.5*maxDim)*maxDim + 2;
+		int chkindex2 = int(0.5*maxDim)*maxDim*maxDim + int(0.5*maxDim)*maxDim + maxDim -3 ;
+		// printf("chk1 : %d chk2 :%d\n",chkindex1,chkindex2);
+		// printf("maxDim : %d\n", maxDim);
 		for (int x=0; x < maxDim; ++x)
 		{
 			for (int y=0; y < maxDim; ++y)
@@ -227,12 +233,17 @@ void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rota
 				for (int z=0; z < maxDim; ++z)
 				{
 					const int index = z*maxDim*maxDim + y*maxDim + x;
-
 					// if voxel is marked as occupied the add a particle
 					if (voxels[index])
-					{
+					{	
+						// printf("%d ", index);
 						if (rigid)
 							g_buffers->rigidIndices.push_back(int(g_buffers->positions.size()));
+						
+						// for spring(my param)
+						if(index == chkindex1 || index == chkindex2){
+							g_buffers->connectSpringIndexs.push_back(int(g_buffers->positions.size()));
+						}
 
 						Vec3 position = lower + meshLower + spacing*Vec3(float(x) + 0.5f, float(y) + 0.5f, float(z) + 0.5f) + RandomUnitVector()*jitter;
 
@@ -249,16 +260,20 @@ void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rota
 						g_buffers->positions.push_back(Vec4(position.x, position.y, position.z, invMass));						
 						g_buffers->velocities.push_back(velocity);
 						g_buffers->phases.push_back(phase);
+						
 					}
 				}
+				// printf("\n");
 			}
+			//printf("\n");
 		}
 		mesh.Transform(ScaleMatrix(1.0f + skinExpand)*TranslationMatrix(Point3(-0.5f*(meshUpper+meshLower))));
 		mesh.Transform(TranslationMatrix(Point3(lower + 0.5f*(meshUpper+meshLower))));	
-	
-	
+		
+
 		if (springStiffness > 0.0f)
-		{
+		{	
+			//printf("spring");
 			// construct cross link springs to occupied cells
 			for (int x=0; x < maxDim; ++x)
 			{

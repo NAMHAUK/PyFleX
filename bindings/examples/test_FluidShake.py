@@ -127,12 +127,10 @@ print("Phases:", np.unique(pyflex.get_phases()))
 
 n_particles = pyflex.get_n_particles()
 n_shapes = pyflex.get_n_shapes()
-n_rigids = pyflex.get_n_rigids()
 n_rigidPositions = pyflex.get_n_rigidPositions()
 
 print("n_particles", n_particles)
 print("n_shapes", n_shapes)
-print("n_rigids", n_rigids)
 print("n_rigidPositions", n_rigidPositions)
 
 positions = np.zeros((time_step, n_particles, dim_position))

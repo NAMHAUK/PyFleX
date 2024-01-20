@@ -1,11 +1,10 @@
-
 class FlagCloth: public Scene
 {
 public:
 
 	FlagCloth(const char* name) : Scene(name) {}
 
-	void Initialize()
+	void Initialize(py::array_t<float> scene_params, int thread_idx = 0)
 	{
 		int dimx = 64;
 		int dimz = 32;
@@ -62,8 +61,8 @@ public:
 		g_numSubsteps = 2;
 
 		// draw options
-		g_drawPoints = false;
-		g_drawSprings = false;
+		g_drawPoints = true;
+		g_drawSprings = true;
 		g_windFrequency *= 2.0f;
 		g_windStrength = 10.0f;
 

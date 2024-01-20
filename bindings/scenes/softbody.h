@@ -128,8 +128,16 @@ public:
 		}
 	}
 
-	virtual void Initialize()
-	{
+	virtual void Initialize(py::array_t<float> scene_params, int thread_idx = 0)
+	{	
+		// for test
+		auto ptr = (float *) scene_params.request().ptr;
+		float chk_drawPoint = ptr[8]; 
+		float chk_drawframe = ptr[9]; 
+		float chk_drawspring = ptr[10]; 
+		float chk_draw = ptr[11]; 
+		//
+
 		float radius = mRadius;
 
 		// no fluids or sdf based collision
@@ -148,10 +156,24 @@ public:
 		g_numSubsteps = 2;
 
 		// draw options
+		
 		g_drawPoints = false;
 		g_wireframe = false;
 		g_drawSprings = false;
 		g_drawBases = false;
+
+		if(chk_drawPoint == 0.0){
+			g_drawPoints = true;
+		}
+		if(chk_drawframe == 0.0){
+			g_wireframe = true;
+		}
+		if(chk_drawspring == 0.0){
+			g_drawSprings = true;
+		}
+		if(chk_draw == 0.0){
+			g_drawBases = true;
+		}
 
 		g_buffers->rigidOffsets.push_back(0);
 
@@ -376,9 +398,9 @@ public:
 	SoftBodyFixed(const char* name) : SoftBody(name) 
 	{}
 
-	virtual void Initialize()
+	virtual void Initialize(py::array_t<float> scene_params, int thread_idx = 0)
 	{
-		SoftBody::Initialize();
+		SoftBody::Initialize(scene_params,0);
 
 		// fix any particles in the wall
 		for (int i = 0; i < int(g_buffers->positions.size()); ++i)
