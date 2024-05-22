@@ -42,25 +42,25 @@ lower_leg_thin = 0.075
 unit_length = 0.0125
 
 # 상대적인 위치 이동을 저장한 값 (Flex 좌표축으로 바꿈)
-relative_joint_positions = np.array([change_axis(0.0, 0.0, 1.0),                # root(pelvis)
-                                    change_axis(0.0, 0.0, 0.236151),            # torso
-                                    change_axis(0.0, 0.0, 0.23),                # head
+relative_joint_positions = np.array([change_axis(0.0, 0.0, unit_length*80),     # root(pelvis)
+                                    change_axis(0.0, 0.0, unit_length*19),      # torso
+                                    change_axis(0.0, 0.0, unit_length*18),      # head
                                     
-                                    change_axis(-0.02405, -0.11-0.05, 0.24350), # right_upper_arm
-                                    change_axis(0.0, 0.0, -0.274788),           # right_lower_arm
-                                    change_axis(0.0, 0.0, -0.258947),           # right_hand
+                                    change_axis(-unit_length*2, -unit_length*13, unit_length*10), # right_upper_arm
+                                    change_axis(0.0, 0.0, -unit_length*22),                       # right_lower_arm
+                                    change_axis(0.0, 0.0, -unit_length*20),                       # right_hand
                                     
-                                    change_axis(-0.02405, 0.11+0.05, 0.24350),  # left_upper_arm
-                                    change_axis(0.0, 0.0, -0.274788),           # left_lower_arm
-                                    change_axis(0.0, 0.0, -0.258947),           # left_hand
+                                    change_axis(-unit_length*2, unit_length*13, unit_length*10),  # left_upper_arm
+                                    change_axis(0.0, 0.0, -unit_length*22),                       # left_lower_arm
+                                    change_axis(0.0, 0.0, -unit_length*20),                       # left_hand
                                     
-                                    change_axis(0.0, -0.084887, 0.0),           # right_thigh
-                                    change_axis(0.0, 0.0, -0.421546),           # right_shin
-                                    change_axis(0.0, 0.0, -0.409870),           # right_foot
+                                    change_axis(0.0, -unit_length*7, 0.0),           # right_thigh
+                                    change_axis(0.0, 0.0, -unit_length*34),           # right_shin
+                                    change_axis(0.0, 0.0, -unit_length*32),           # right_foot
                                     
-                                    change_axis(0.0, 0.084887, 0.0),            # left_thigh
-                                    change_axis(0.0, 0.0, -0.421546),           # left_shin
-                                    change_axis(0.0, 0.0, -0.409870)            # left_foot
+                                    change_axis(0.0, -unit_length*7, 0.0),            # left_thigh
+                                    change_axis(0.0, 0.0, -unit_length*34),           # left_shin
+                                    change_axis(0.0, 0.0, -unit_length*32)            # left_foot
                                     ])
 
 # 순서는 relative와 같음 (Flex 좌표축임)
@@ -87,8 +87,8 @@ global_joint_positions = np.array([relative_joint_positions[0],
 ])
 
 geom_start_pos  = np.array([# pelvis
-                            sphere_to_box(global_joint_positions[0] + np.array([0, 0.07, 0]), 0.09),     
-                            sphere_to_box(global_joint_positions[0] + np.array([0, 0.205, 0]), 0.07),
+                            sphere_to_box(global_joint_positions[0] + np.array([0, unit_length*6, 0]), unit_length*7),     
+                            sphere_to_box(global_joint_positions[0] + np.array([0, unit_length*19-unit_length, 0]), unit_length*6),
                             sphere_to_box(global_joint_positions[1] + np.array([0, 0.12, 0]), 0.11) + np.array([-0.05, 0.0, 0.0]),
                             
                             # neck
@@ -118,8 +118,8 @@ geom_start_pos  = np.array([# pelvis
                             global_joint_positions[14] + change_axis(0.045, 0, -0.0225) + np.array([-lower_leg_thin/2, 0.05, -0.05]),
                             ])
 
-geom_scales     = np.array([sphere_scale(0.09),
-                            sphere_scale(0.07),
+geom_scales     = np.array([[unit_length*14, unit_length*14, unit_length*14],
+                            [unit_length*12, unit_length*12, unit_length*12],
                             sphere_scale(0.11)+ np.array([0.1, 0.0, 0.0]),
 
                             # neck

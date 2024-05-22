@@ -86,8 +86,10 @@ SDL_GameController* g_gamecontroller = nullptr;
 
 using namespace std;
 
-int g_screenWidth = 960;
-int g_screenHeight = 720;
+// int g_screenWidth = 960;
+// int g_screenHeight = 720;
+int g_screenWidth = 3000;
+int g_screenHeight = 2100;
 int g_msaaSamples = 8;
 
 int g_numSubsteps;
@@ -645,7 +647,8 @@ void Init(int scene, py::array_t<float> scene_params, bool centerCamera = true, 
     g_expandCloth = 0.0f;
 
     g_drawOpaque = false;
-    g_drawSprings = false;
+    g_drawSprings = true;
+    // g_drawSprings = false;
     g_drawDiffuse = false;
     g_drawMesh = true;
     g_drawRopes = true;
@@ -689,7 +692,7 @@ void Init(int scene, py::array_t<float> scene_params, bool centerCamera = true, 
     g_params.smoothing = 1.0f;
 
     g_params.dissipation = 0.0f;
-    g_params.damping = 0.0f;
+    g_params.damping = 5.0f;
     g_params.particleCollisionMargin = 0.0f;
     g_params.shapeCollisionMargin = 0.0f;
     g_params.collisionDistance = 0.0f;
@@ -2464,8 +2467,8 @@ void pyflex_init() {
     g_scenes.push_back(new yz_FluidShake("Fluid Shake"));
     g_scenes.push_back(new yz_BoxBathExt("Box Bath Extension", true));
     g_scenes.push_back(new yz_FluidIceShake("Fluid Ice Shake"));
-
-    g_scenes.push_back(new my_scene("my_scene"));
+    g_scenes.push_back(new Spring_Test("spring"));
+    // g_scenes.push_back(new my_scene("my_scene"));
     // g_scenes.push_back(new FlagCloth("Flag Cloth"));
     // //----------test----------------
     // make_path(bunny_path, "/data/bunny.ply");
@@ -3115,19 +3118,29 @@ py::array_t<float> pyflex_get_rigidGlobalPositions() {
     return rigidGlobalPositions;
 }
 
-int pyflex_get_n_rigids() {
-    g_buffers->rigidRotations.map();
-    int n_rigids = g_buffers->rigidRotations.size();
-    g_buffers->rigidRotations.unmap();
-    return n_rigids;
-}
-
-// void pyflex_get_n_rigids(float springlength, int springindex) {
-//     g_buffers->springLengths.map();
-//     g_buffers->springLengths[springindex] = springlength;
-//     //printf("%f\n", g_buffers->springLengths[springindex]);
-//     g_buffers->springLengths.unmap();
+// int pyflex_get_n_rigids() {
+//     g_buffers->rigidRotations.map();
+//     int n_rigids = g_buffers->rigidRotations.size();
+//     g_buffers->rigidRotations.unmap();
+//     return n_rigids;
 // }
+
+void pyflex_get_n_rigids(float springlength, int springindex) {
+    g_buffers->springLengths.map();
+    g_buffers->springIndices.map();
+    g_buffers->springStiffness.map();
+    g_buffers->springLengths[springindex] = springlength;
+    printf("length, size : %f %d\n", g_buffers->springLengths[springindex], g_buffers->springIndices.size());
+    g_buffers->springLengths.unmap();
+    g_buffers->springIndices.unmap();
+    g_buffers->springStiffness.unmap();
+   
+    if (g_buffers->springIndices.size()) {
+        assert((g_buffers->springIndices.size() & 1) == 0);
+        assert((g_buffers->springIndices.size() / 2) == g_buffers->springLengths.size());
+        NvFlexSetSprings(g_solver, g_buffers->springIndices.buffer, g_buffers->springLengths.buffer, g_buffers->springStiffness.buffer, g_buffers->springLengths.size());
+    }
+}
 
 py::array_t<float> pyflex_get_rigidRotations() {
     g_buffers->rigidRotations.map();
@@ -3355,7 +3368,7 @@ void pyflex_render(int capture, char *path) {
         UpdateEmitters();
         UpdateMouse();
         UpdateWind();
-        // UpdateScene();
+        //UpdateScene(update_params);
     }
 
     //-------------------------------------------------------------------
@@ -3496,6 +3509,28 @@ void pyflex_render(int capture, char *path) {
     }
 }
 
+void pyflex_handle_spring(py::array_t<float> springlengths) {
+    g_buffers->springLengths.map();
+    g_buffers->springIndices.map();
+    g_buffers->springStiffness.map();
+    
+    auto bufp = springlengths.request();
+    auto springlengths_buf = (float *) bufp.ptr;
+    for(int i=9; i<g_buffers->springLengths.size();i++){
+        g_buffers->springLengths[i] = springlengths_buf[i-9];
+    }
+
+    g_buffers->springLengths.unmap();
+    g_buffers->springIndices.unmap();
+    g_buffers->springStiffness.unmap();
+   
+    if (g_buffers->springIndices.size()) {
+        assert((g_buffers->springIndices.size() & 1) == 0);
+        assert((g_buffers->springIndices.size() / 2) == g_buffers->springLengths.size());
+        NvFlexSetSprings(g_solver, g_buffers->springIndices.buffer, g_buffers->springLengths.buffer, g_buffers->springStiffness.buffer, g_buffers->springLengths.size());
+    }
+}
+
 
 PYBIND11_MODULE(pyflex, m) {
     m.def("main", &main);
@@ -3541,5 +3576,5 @@ PYBIND11_MODULE(pyflex, m) {
     m.def("get_scene_upper", &pyflex_get_sceneUpper);
     m.def("get_scene_lower", &pyflex_get_sceneLower);
 
-    //m.def("pyflex_spring_update", &pyflex_spring_update);
+    m.def("handle_spring", &pyflex_handle_spring);
 }

@@ -72,6 +72,8 @@ public:
 
 #include "scenes/myscene.h"
 
+#include "scenes/spring_test.h"
+
 #include "scenes/adhesion.h"
 #include "scenes/armadilloshower.h"
 #include "scenes/bananas.h"

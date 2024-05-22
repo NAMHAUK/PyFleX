@@ -152,7 +152,7 @@ void CreateSpring(int i, int j, float stiffness, float give=0.0f)
 	g_buffers->springStiffness.push_back(stiffness);
 }
 
-void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rotation, float spacing, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, bool skin, float jitter=0.005f, Vec3 skinOffset=0.0f, float skinExpand=0.0f, Vec4 color=Vec4(0.0f), float springStiffness=0.001f)
+void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rotation, float spacing, Vec3 velocity, float invMass, bool rigid, float rigidStiffness, int phase, bool skin, float jitter=0.005f, Vec3 skinOffset=0.0f, float skinExpand=0.0f, Vec4 color=Vec4(0.0f), float springStiffness=0.1f)
 {
 	if (rigid && g_buffers->rigidIndices.empty())
 		g_buffers->rigidOffsets.push_back(0);
@@ -273,7 +273,7 @@ void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rota
 
 		if (springStiffness > 0.0f)
 		{	
-			//printf("spring");
+			printf("spring");
 			// construct cross link springs to occupied cells
 			for (int x=0; x < maxDim; ++x)
 			{
@@ -309,7 +309,6 @@ void CreateParticleShape(const Mesh* srcMesh, Vec3 lower, Vec3 scale, float rota
 				}
 			}
 		}
-
 	}
 	
 
