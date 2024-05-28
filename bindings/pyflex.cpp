@@ -647,8 +647,7 @@ void Init(int scene, py::array_t<float> scene_params, bool centerCamera = true, 
     g_expandCloth = 0.0f;
 
     g_drawOpaque = false;
-    g_drawSprings = true;
-    // g_drawSprings = false;
+    g_drawSprings = false;
     g_drawDiffuse = false;
     g_drawMesh = true;
     g_drawRopes = true;

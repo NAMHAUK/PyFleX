@@ -34,11 +34,11 @@ def sphere_scale(radius):
     return radius*2, radius*2, radius*2
 
 unit_length = 0.0125
-upper_arm_thin = unit_length*6
-lower_arm_thin = unit_length*4
+upper_arm_thin = unit_length*7
+lower_arm_thin = unit_length*5
 
-upper_leg_thin = unit_length*8
-lower_leg_thin = unit_length*6
+upper_leg_thin = unit_length*9
+lower_leg_thin = unit_length*7
 
 
 
@@ -47,11 +47,11 @@ relative_joint_positions = np.array([change_axis(0.0, 0.0, unit_length*80),     
                                     change_axis(0.0, 0.0, unit_length*19),      # torso
                                     change_axis(0.0, 0.0, unit_length*18),      # head
                                     
-                                    change_axis(-unit_length*2, -unit_length*15, unit_length*10), # right_upper_arm
+                                    change_axis(-unit_length*2, -unit_length*14, unit_length*18), # right_upper_arm
                                     change_axis(0.0, 0.0, -unit_length*22),                       # right_lower_arm
                                     change_axis(0.0, 0.0, -unit_length*20),                       # right_hand
                                     
-                                    change_axis(-unit_length*2, unit_length*15, unit_length*10),  # left_upper_arm
+                                    change_axis(-unit_length*2, unit_length*14, unit_length*18),  # left_upper_arm
                                     change_axis(0.0, 0.0, -unit_length*22),                       # left_lower_arm
                                     change_axis(0.0, 0.0, -unit_length*20),                       # left_hand
                                     
@@ -88,77 +88,74 @@ global_joint_positions = np.array([relative_joint_positions[0],
 ])
 
 geom_start_pos  = np.array([# pelvis
-                            sphere_to_box(global_joint_positions[0] + np.array([0, unit_length*6, 0]), unit_length*6.5),     
+                            sphere_to_box(global_joint_positions[0] + np.array([0, unit_length*6, 0]), unit_length*7.5),     
                             sphere_to_box(global_joint_positions[0] + np.array([0, unit_length*16, 0]), unit_length*5.5),
-                            sphere_to_box(global_joint_positions[1] + np.array([0, unit_length*9, 0]), unit_length*8.5) + np.array([-unit_length*4, 0.0, 0.0]),
+                            sphere_to_box(global_joint_positions[1] + np.array([0, unit_length*9, 0]), unit_length*9.5) + np.array([-unit_length*5, 0.0, 0.0]),
                             
                             # neck
-                            global_joint_positions[2] + np.array([-unit_length*2, -unit_length, -unit_length*2]),
+                            global_joint_positions[2] + np.array([-unit_length*2.5, -unit_length*0.5, -unit_length*2.5]),
                             
                             # head
-                            sphere_to_box(global_joint_positions[2] + np.array([0, unit_length*11,0]), unit_length*7),
+                            sphere_to_box(global_joint_positions[2] + np.array([0, unit_length*11,0]), unit_length*7.5),
 
                             # right arm
-                            fromto_to_box(global_joint_positions[3], np.array([0, -unit_length*18, 0]), np.array([-upper_arm_thin/2, -unit_length*4, -upper_arm_thin/2])),
-                            fromto_to_box(global_joint_positions[4], np.array([0, -0.1875, 0]), np.array([-lower_arm_thin/2, -lower_arm_thin, -lower_arm_thin/2])),
-                            sphere_to_box(global_joint_positions[5], 0.04),
+                            fromto_to_box(global_joint_positions[3], np.array([0, -unit_length*15.5, 0]), np.array([-upper_arm_thin/2, -upper_arm_thin, -upper_arm_thin/2])),
+                            fromto_to_box(global_joint_positions[4], np.array([0, -unit_length*14.5, 0]), np.array([-lower_arm_thin/2, -lower_arm_thin, -lower_arm_thin/2])),
+                            sphere_to_box(global_joint_positions[5], unit_length*3.5),
                             
                             # left arm
-                            fromto_to_box(global_joint_positions[6], np.array([0, -0.23, 0]), np.array([-upper_arm_thin/2, -upper_arm_thin, -upper_arm_thin/2])),
-                            fromto_to_box(global_joint_positions[7], np.array([0, -0.1875, 0]), np.array([-lower_arm_thin/2, -lower_arm_thin, -lower_arm_thin/2])),
-                            sphere_to_box(global_joint_positions[8], 0.04),
+                            fromto_to_box(global_joint_positions[6], np.array([0, -unit_length*15.5, 0]), np.array([-upper_arm_thin/2, -upper_arm_thin, -upper_arm_thin/2])),
+                            fromto_to_box(global_joint_positions[7], np.array([0, -unit_length*14.5, 0]), np.array([-lower_arm_thin/2, -lower_arm_thin, -lower_arm_thin/2])),
+                            sphere_to_box(global_joint_positions[8], unit_length*3.5),
 
                             # right leg
-                            fromto_to_box(global_joint_positions[9], np.array([0, -0.36 -0.055/2, 0]), np.array([-upper_leg_thin/2, -0.055, -upper_leg_thin/2])),
-                            fromto_to_box(global_joint_positions[10], np.array([0, -0.355, 0]), np.array([-lower_leg_thin/2, -lower_leg_thin, -lower_leg_thin/2])),
-                            global_joint_positions[11] + change_axis(0.045, 0, -0.0225) + np.array([-lower_leg_thin/2, 0.05, -0.05]),
+                            fromto_to_box(global_joint_positions[9], np.array([0, -unit_length*24.5, 0]), np.array([-upper_leg_thin/2, -upper_leg_thin, -upper_leg_thin/2])),
+                            fromto_to_box(global_joint_positions[10], np.array([0, -unit_length*25.5, 0]), np.array([-lower_leg_thin/2, -lower_leg_thin, -lower_leg_thin/2])),
+                            global_joint_positions[11] + np.array([-lower_leg_thin/2, -unit_length*3.5, -lower_leg_thin/2]),
 
                             # left leg
-                            fromto_to_box(global_joint_positions[12], np.array([0, -0.36-0.055/2, 0]), np.array([-upper_leg_thin/2, -0.055, -upper_leg_thin/2])),
-                            fromto_to_box(global_joint_positions[13], np.array([0, -0.355, 0]), np.array([-lower_leg_thin/2, -lower_leg_thin, -lower_leg_thin/2])),
-                            global_joint_positions[14] + change_axis(0.045, 0, -0.0225) + np.array([-lower_leg_thin/2, 0.05, -0.05]),
+                            fromto_to_box(global_joint_positions[12], np.array([0, -unit_length*24.5, 0]), np.array([-upper_leg_thin/2, -upper_leg_thin, -upper_leg_thin/2])),
+                            fromto_to_box(global_joint_positions[13], np.array([0, -unit_length*25.5, 0]), np.array([-lower_leg_thin/2, -lower_leg_thin, -lower_leg_thin/2])),
+                            global_joint_positions[14] + np.array([-lower_leg_thin/2, -unit_length*3.5, -lower_leg_thin/2]),
                             ])
 
-geom_scales     = np.array([[unit_length*13, unit_length*13, unit_length*13],
+geom_scales     = np.array([[unit_length*15, unit_length*15, unit_length*15],
                             [unit_length*11, unit_length*11, unit_length*11],
-                            [unit_length*15+unit_length*8, unit_length*15, unit_length*15],
+                            [unit_length*19+unit_length*10, unit_length*19, unit_length*19],
 
                             # neck
-                            [unit_length*4, unit_length*6, unit_length*4],
+                            [unit_length*5, unit_length*5, unit_length*5],
                             
                             # head
-                            [unit_length*14, unit_length*14, unit_length*14],
+                            [unit_length*15, unit_length*15, unit_length*15],
 
                             # right arm
-                            [upper_arm_thin, unit_length*22, upper_arm_thin],
-                            [lower_arm_thin, 0.135+0.04*2.5, lower_arm_thin],
-                            sphere_scale(0.04),
+                            [upper_arm_thin, unit_length*23, upper_arm_thin],
+                            [lower_arm_thin, unit_length*20, lower_arm_thin],
+                            [unit_length*7, unit_length*7, unit_length*7],
 
                             # left arm
-                            [upper_arm_thin, 0.18+0.045*2, upper_arm_thin],
-                            [lower_arm_thin, 0.135+0.04*2.5, lower_arm_thin],
-                            sphere_scale(0.04),
+                            [upper_arm_thin, unit_length*23, upper_arm_thin],
+                            [lower_arm_thin, unit_length*20, lower_arm_thin],
+                            [unit_length*7, unit_length*7, unit_length*7],
 
                             # right leg
-                            [upper_leg_thin, 0.3+0.055*2.5, upper_leg_thin],
-                            [lower_leg_thin, 0.35+0.05*1.5, lower_leg_thin],
-                            [lower_leg_thin, 0.0285, 0.0895],
+                            [upper_leg_thin, unit_length*34, upper_leg_thin],
+                            [lower_leg_thin, unit_length*33, lower_leg_thin],
+                            [lower_leg_thin, unit_length*4, unit_length*14],
 
                             # left leg
-                            [upper_leg_thin, 0.3+0.055*2.5, upper_leg_thin],
-                            [lower_leg_thin, 0.35+0.05*1.5, lower_leg_thin],
-                            [lower_leg_thin, 0.0285, 0.0895]
+                            [upper_leg_thin, unit_length*34, upper_leg_thin],
+                            [lower_leg_thin, unit_length*33, lower_leg_thin],
+                            [lower_leg_thin, unit_length*4, unit_length*14]
 ])
 
 density         = np.array([2226,
                             2226,
                             1794,
 
-                            # 가슴
-                            1100,
-                            1100,
-
-                            # head
+                            # head, neck
+                            1081,
                             1081,
 
                             # right arm
@@ -185,12 +182,12 @@ density         = np.array([2226,
 geom_start_pos = geom_start_pos*4
 geom_scales = geom_scales*4
 
-draw_spring = np.array([1])
+draw_spring = np.array([1.0])
 
 print(geom_scales)
 np.set_printoptions(suppress=True)
 scene_params= np.concatenate((geom_start_pos.reshape(-1), geom_scales.reshape(-1), density, draw_spring))
-
+print(scene_params)
 # np.append(scene_params,[10])
 
 pyflex.init()

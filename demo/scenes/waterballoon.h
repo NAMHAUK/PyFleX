@@ -147,7 +147,7 @@ public:
 
 		g_drawPoints = false;
 		g_drawEllipsoids = true;
-		g_drawSprings = 0;
+		g_drawSprings = 1;
 		g_drawCloth = false;
 		g_warmup = true;
 
