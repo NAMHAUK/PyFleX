@@ -19,6 +19,8 @@ public:
 	    *a = *b;
 	    *b = tmp;
 	}
+
+	// 꼭짓점 8개 끼리만 spring 연결
 	int* get_box_points(int start_index, int x, int y, int z){
 		int *arr = (int *)malloc(sizeof(int) * 8);
 		arr[0] = start_index;
@@ -32,7 +34,30 @@ public:
 
 		return arr;
 	}
+	// 긴 거는 5칸 마다 추가로 spring 연결
+	// spring 개수 spring number :242808
 	int* get_box_points2(int start_index, int x, int y, int z){
+		int *arr = (int *)malloc(sizeof(int) * (27+ 9*(y-1)/5));
+		for(int i=0; i<3; i++){
+			for(int j=0; j<3; j++){
+				for(int k=0; k<3; k++){
+					arr[9*i+ 3*j + k] = start_index + i*z*y*(x-1)/2 + j*z*(y-1)/2 + k*(z-1)/2;
+				}
+			}
+		}
+
+		for(int i=0; i<3; i++){
+			for(int j=0; j<((y-1)/5); j++){
+				for(int k=0; k<3; k++){
+					arr[27+ 3*((y-1)/5)*i+ 3*j + k] = start_index + i*z*y*(x-1)/2 + j*z*5 + k*(z-1)/2;
+				}
+			}
+		}
+		return arr;
+	}
+
+	// 각 box마다 27개 연결
+	int* get_box_points3(int start_index, int x, int y, int z){
 		int *arr = (int *)malloc(sizeof(int) * 27);
 		for(int i=0; i<3; i++){
 			for(int j=0; j<3; j++){
@@ -44,6 +69,24 @@ public:
 
 		return arr;
 	}
+
+	// 각 box 3*3 마다 spring 연결
+	int* get_box_points4(int start_index, int x, int y, int z){
+		int n_x = (x+1)*0.5;
+		int n_y = (y+1)*0.5;
+		int n_z = (z+1)*0.5;
+		int *arr = (int *)malloc(sizeof(int)*n_x*n_y*n_z);
+		for(int i=0; i<n_x; i++){
+			for(int j=0; j<n_y; j++){
+				for(int k=0; k<n_z; k++){
+					arr[n_z*n_y*i+ n_z*j + k] = start_index + i*z*y*2 + j*z*2 + k*2;
+				}
+			}
+		}
+
+		return arr;
+	}
+
 
 	void Initialize(py::array_t<float> scene_params, int thread_idx = 0)
 	{
@@ -87,12 +130,21 @@ public:
 			particle_end_index[i] = g_buffers->positions.size()-1;
 		}
 
-		
-		int total_particle_num = g_buffers->positions.size();
+		printf("particle num : %d \n", g_buffers->positions.size());
+	
 		float stiffness = 1.0f;
 		
 		int spring_count =0;
 		int spring_jump = 20;
+
+		// 같은 joint인 부분 상대 위치 안 변하게 spring으로 묶기
+		// {몸통 1, 몸통 2}, {머리, 목}
+		for(int i=0; i<11; i++){
+			for(int j=0; j<11; j++){
+				int index1 = particle_start_index[0]+ 15*15*2 + 15*13 + k
+			}
+		}
+
 		
 		int part_scales[n_geom][3]  = {	{15, 15, 15},
                             		  	{11, 11, 11},
@@ -127,10 +179,9 @@ public:
 
 		// length 0인 각 part 연결부위 spring으로 연결
 		int connect_spring_stiffness = 3.0f;
-		int connect_particle_index[16][2] ={{particle_start_index[0]+ 15*15*7 + 15*13 + 7 , particle_start_index[1]+ 11*11*5 + 11*1 + 5},	// body1 & body2
+		int connect_particle_index[14][2] ={{
 											{particle_start_index[1]+ 11*11*5 + 11*9 + 5  , particle_start_index[2]+ 19*19*14 + 9},			// body2 & body3
 											{particle_start_index[2]+ 19*19*14 + 19*18 + 9, particle_start_index[3]+ 5*5*2 + 2},			// body3 & neck
-											{particle_start_index[3]+ 5*5*2 + 5*4 + 2     , particle_start_index[4]+ 15*15*7 + 7},			// neck  & head
 
 											// right arm
 											{particle_start_index[2]+ 19*19*28 + 19*18 + 9, particle_start_index[5]+ 7*23*3 + 7*22 + 3},	// body3 & U_arm
@@ -153,9 +204,7 @@ public:
 											{particle_start_index[15]+ 7*33*3 + 3  		  , particle_start_index[16]+ 14*4*3 + 14*3 + 3},	// L_leg & foot
 		};
 
-		printf("particle num : %d \n", g_buffers->positions.size());
-
-		for (int i=0 ; i<16; i++){
+		for (int i=0 ; i<14; i++){
 			printf("index : %d, %d\n", connect_particle_index[i][0], connect_particle_index[i][1]);
 			CreateSpring(connect_particle_index[i][0], connect_particle_index[i][1], 3.0f);
 		}
@@ -164,16 +213,18 @@ public:
 		// 각 꼭짓점의 index를 얻어 저장한 배열 생성
 		int ** all_box_points = (int **) malloc ( sizeof(int *) * n_geom);
 		for (int i=0; i<n_geom ; i++){
-			all_box_points[i] = get_box_points2(particle_start_index[i], part_scales[i][0], part_scales[i][1], part_scales[i][2]);
+			all_box_points[i] = get_box_points4(particle_start_index[i], part_scales[i][0], part_scales[i][1], part_scales[i][2]);
 		}
 		// 각 꼭짓점들끼리 연결
 		for (int i=0; i<n_geom; i++){
 			// 자신 제외 다른 part와 연결
 			for(int j=0; j<n_geom; j++){
 				if(i==j){continue;}
-
-				for(int a=0; a<27; a++){
-					for(int b=0; b<27; b++){
+				printf("cur : %d, %d\n", i,j);
+				int i_size = (part_scales[i][0]+1)*0.5*(part_scales[i][1]+1)*0.5*(part_scales[i][2]+1)*0.5;
+				int j_size = (part_scales[j][0]+1)*0.5*(part_scales[j][1]+1)*0.5*(part_scales[j][2]+1)*0.5;
+				for(int a=0; a<i_size; a++){
+					for(int b=0; b<j_size; b++){
 						CreateSpring(all_box_points[i][a], all_box_points[j][b], stiffness);
 						spring_count ++;
 					}

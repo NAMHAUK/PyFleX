@@ -182,7 +182,7 @@ density         = np.array([2226,
 geom_start_pos = geom_start_pos*4
 geom_scales = geom_scales*4
 
-draw_spring = np.array([1.0])
+draw_spring = np.array([0.0])
 
 print(geom_scales)
 np.set_printoptions(suppress=True)
