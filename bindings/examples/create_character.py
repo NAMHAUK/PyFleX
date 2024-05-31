@@ -184,11 +184,10 @@ geom_scales = geom_scales*4
 
 draw_spring = np.array([0.0])
 
-print(geom_scales)
 np.set_printoptions(suppress=True)
 scene_params= np.concatenate((geom_start_pos.reshape(-1), geom_scales.reshape(-1), density, draw_spring))
 print(scene_params)
-# np.append(scene_params,[10])
+
 
 pyflex.init()
 time.sleep(3)
