@@ -99,6 +99,38 @@ public:
 		int particle_start_index[n_geom];
 		int particle_end_index[n_geom];
 
+		// 각 part를 unit_length로 나타낸 길이
+		int part_scales[n_geom][3]  = {	{15, 15, 15},
+                            		  	{11, 11, 11},
+                            			{19+10, 19, 19},
+
+                            			// neck
+										{5, 5, 5},
+										
+										// head
+										{15, 15, 15},
+
+										// right arm
+										{7, 23, 7},
+										{5, 20, 5},
+										{7, 7, 7},
+
+										// left arm
+										{7, 23, 7},
+										{5, 20, 5},
+										{7, 7, 7},
+
+										// right leg
+										{9, 34, 9},
+										{7, 33, 7},
+										{7, 4, 14},
+
+										// left leg
+										{9, 34, 9},
+										{7, 33, 7},
+										{7, 4, 14}
+		};
+
 		// ------------------------------------------ 각 part 생성 -----------------------------------------
 		for(int i=0; i<n_geom; i++){
 			particle_start_index[i] = g_buffers->positions.size();
@@ -110,9 +142,10 @@ public:
 			float scale_y = ptr[n_geom*3 + i*3 + 1];
 			float scale_z = ptr[n_geom*3 + i*3 + 2];
 
-			float mass = ptr[n_geom*3*2 + i] * 0.0001;
+			float invmass = (part_scales[i][0]*part_scales[i][1]*part_scales[i][2]) / ptr[n_geom*3*2 + i] ;
+			printf("invmass %d : %f\n",i,invmass);
 
-			CreateParticleShape(GetFilePathByPlatform(box_path).c_str(), Vec3(pos_x, pos_y, pos_z), Vec3(scale_x, scale_y, scale_z), 0.0f, s, Vec3(0.0f, 0.0f, 0.0f), mass, true, 1.0f, NvFlexMakePhase(group, 0), false, 0.0f);
+			CreateParticleShape(GetFilePathByPlatform(box_path).c_str(), Vec3(pos_x, pos_y, pos_z), Vec3(scale_x, scale_y, scale_z), 0.0f, s, Vec3(0.0f, 0.0f, 0.0f), invmass, true, 1.0f, NvFlexMakePhase(group, 0), false, 0.0f);
 			particle_end_index[i] = g_buffers->positions.size()-1;
 		}
 		printf("particle num : %d \n", g_buffers->positions.size());
@@ -169,38 +202,6 @@ public:
 		}
 		
 		// --------------------- 캐릭터 동작을 위해 각 part spring으로 연결 ---------------------
-
-		// 각 part를 unit_length로 나타낸 길이
-		int part_scales[n_geom][3]  = {	{15, 15, 15},
-                            		  	{11, 11, 11},
-                            			{19+10, 19, 19},
-
-                            			// neck
-										{5, 5, 5},
-										
-										// head
-										{15, 15, 15},
-
-										// right arm
-										{7, 23, 7},
-										{5, 20, 5},
-										{7, 7, 7},
-
-										// left arm
-										{7, 23, 7},
-										{5, 20, 5},
-										{7, 7, 7},
-
-										// right leg
-										{9, 34, 9},
-										{7, 33, 7},
-										{7, 4, 14},
-
-										// left leg
-										{9, 34, 9},
-										{7, 33, 7},
-										{7, 4, 14}
-		};
 
 		// 각 part 내부 일정 거리마다 있는 particle들 spring 연결
 		// 각 part에서 spring으로 연결할 particle들 global index 계산하여 저장

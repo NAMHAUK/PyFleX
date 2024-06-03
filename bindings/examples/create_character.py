@@ -3,6 +3,7 @@ import numpy as np
 import time
 import pyflex
 import copy
+import math
 
 data = np.load('amp_humanoid_walk.npy', allow_pickle=True).item() # 데이터 로드. @파일명
 rotation_data = data['rotation']['arr']
@@ -32,6 +33,14 @@ def fromto_to_box(joint, start, fromto_unit):
 # sphere box로 바꾸고 box scale
 def sphere_scale(radius):
     return radius*2, radius*2, radius*2
+
+# ASE에서 sphere의 전체 무게 구하기
+def get_sphere_mass(radius, density):
+    return (4/3)*radius*radius*radius*np.pi*density
+
+# ASE에서 fromto의 전체 무게 구하기
+def get_fromto_mass(radius, length, density):
+    return ((4/3)*radius*radius*radius + length*radius*radius)*np.pi*density
 
 unit_length = 0.0125
 upper_arm_thin = unit_length*7
@@ -87,6 +96,7 @@ global_joint_positions = np.array([relative_joint_positions[0],
                                    relative_to_global([12,13,14]),
 ])
 
+# 각 box의 start 좌표
 geom_start_pos  = np.array([# pelvis
                             sphere_to_box(global_joint_positions[0] + np.array([0, unit_length*6, 0]), unit_length*7.5),     
                             sphere_to_box(global_joint_positions[0] + np.array([0, unit_length*16, 0]), unit_length*5.5),
@@ -119,6 +129,7 @@ geom_start_pos  = np.array([# pelvis
                             global_joint_positions[14] + np.array([-lower_leg_thin/2, -unit_length*3.5, -lower_leg_thin/2]),
                             ])
 
+# 각 box의 x,y,z축 방향으로 길이
 geom_scales     = np.array([[unit_length*15, unit_length*15, unit_length*15],
                             [unit_length*11, unit_length*11, unit_length*11],
                             [unit_length*19+unit_length*10, unit_length*19, unit_length*19],
@@ -154,7 +165,7 @@ density         = np.array([2226,
                             2226,
                             1794,
 
-                            # head, neck
+                            # neck, head
                             1081,
                             1081,
 
@@ -179,19 +190,43 @@ density         = np.array([2226,
                             1141,
                             ])
 
+mass            = np.array([get_sphere_mass(0.09, density[0]),
+                            get_sphere_mass(0.07, density[1]),
+                            get_sphere_mass(0.11, density[2]) + 2*get_fromto_mass(0.0225, math.dist([-0.0060125, -0.0457775, 0.2287955],[-0.016835, -0.128177, 0.2376182]),1100),
+                            
+                            get_sphere_mass(0.095, density[3])*(1/27),
+                            get_sphere_mass(0.095, density[4])*(26/27),
+                            
+                            get_fromto_mass(0.0225, math.dist([0, 0, -0.05],[0, 0, -0.23]),density[5]),
+                            get_fromto_mass(0.02  , math.dist([0, 0, -0.0525], [0, 0, -0.1875]),density[6]),
+                            get_sphere_mass(0.04, density[7]),
+
+                            get_fromto_mass(0.0225, math.dist([0, 0, -0.05],[0, 0, -0.23]),density[8]),
+                            get_fromto_mass(0.02  , math.dist([0, 0, -0.0525],[0, 0, -0.1875]),density[9]),
+                            get_sphere_mass(0.04, density[10]),
+                            
+                            get_fromto_mass(0.0275, math.dist([0, 0, -0.0], [0, 0, -0.36]),density[11]),
+                            get_fromto_mass(0.025 , math.dist([0, 0, -0.045], [0, 0, -0.355]), density[12]),
+                            0.0885*0.045*0.0275*density[13],
+                            
+                            get_fromto_mass(0.0275, math.dist([0, 0, -0.0], [0, 0, -0.36]),density[14]),
+                            get_fromto_mass(0.025 , math.dist([0, 0, -0.045], [0, 0, -0.355]), density[15]),
+                            0.0885*0.045*0.0275*density[16]
+                            ])
+
+print("total mass: ", np.sum(mass))
 geom_start_pos = geom_start_pos*4
 geom_scales = geom_scales*4
 
 draw_spring = np.array([0.0])
 
 np.set_printoptions(suppress=True)
-scene_params= np.concatenate((geom_start_pos.reshape(-1), geom_scales.reshape(-1), density, draw_spring))
+scene_params= np.concatenate((geom_start_pos.reshape(-1), geom_scales.reshape(-1), mass, draw_spring))
 print(scene_params)
-
 
 pyflex.init()
 time.sleep(3)
-pyflex.set_scene(1,scene_params,0)
+pyflex.set_scene(1, scene_params, 0)
 
 for i in range(1000):
     pyflex.step()
