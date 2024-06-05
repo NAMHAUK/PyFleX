@@ -9,6 +9,29 @@ data = np.load('amp_humanoid_walk.npy', allow_pickle=True).item() # 데이터 �
 rotation_data = data['rotation']['arr']
 print(rotation_data[0])
 
+# q^(-1) 구함
+def quaternion_inverse(q):
+    w, x, y, z = q
+    norm = w*w + x*x + y*y + z*z
+    return (w / norm, -x / norm, -y / norm, -z / norm)
+
+# quaternion 형식의 두 값 곱함
+def quaternion_multiply(q1, q2):
+    w1, x1, y1, z1 = q1
+    w2, x2, y2, z2 = q2
+    w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
+    x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
+    y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
+    z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
+    return (w, x, y, z)
+
+# vector를 quaternion 방식으로 회전시킨 결과 vector return
+def rotate_vector_by_quaternion(v, q):
+    v_q = (0, v[0], v[1], v[2])
+    q_inv = quaternion_inverse(q)
+    v_rotated = quaternion_multiply(quaternion_multiply(q, v_q), q_inv)
+    return v_rotated[1:]  # Return only the vector part
+
 # 축의 방향이 다르므로 바꿔주는 함수
 # data -> flex
 def change_axis(x, y, z):
@@ -42,7 +65,7 @@ def get_sphere_mass(radius, density):
 def get_fromto_mass(radius, length, density):
     return ((4/3)*radius*radius*radius + length*radius*radius)*np.pi*density
 
-unit_length = 0.0125
+unit_length = 0.05
 upper_arm_thin = unit_length*7
 lower_arm_thin = unit_length*5
 
@@ -161,6 +184,7 @@ geom_scales     = np.array([[unit_length*15, unit_length*15, unit_length*15],
                             [lower_leg_thin, unit_length*4, unit_length*14]
 ])
 
+# 각 part의 ASE density data (kg/m^3)
 density         = np.array([2226,
                             2226,
                             1794,
@@ -190,12 +214,13 @@ density         = np.array([2226,
                             1141,
                             ])
 
+# ASE data를 통해 구한 각 part의 ASE 무게
 mass            = np.array([get_sphere_mass(0.09, density[0]),
                             get_sphere_mass(0.07, density[1]),
                             get_sphere_mass(0.11, density[2]) + 2*get_fromto_mass(0.0225, math.dist([-0.0060125, -0.0457775, 0.2287955],[-0.016835, -0.128177, 0.2376182]),1100),
                             
-                            get_sphere_mass(0.095, density[3])*(1/27),
-                            get_sphere_mass(0.095, density[4])*(26/27),
+                            get_sphere_mass(0.095, density[3])*(1/28),
+                            get_sphere_mass(0.095, density[4])*(27/28),
                             
                             get_fromto_mass(0.0225, math.dist([0, 0, -0.05],[0, 0, -0.23]),density[5]),
                             get_fromto_mass(0.02  , math.dist([0, 0, -0.0525], [0, 0, -0.1875]),density[6]),
@@ -215,8 +240,10 @@ mass            = np.array([get_sphere_mass(0.09, density[0]),
                             ])
 
 print("total mass: ", np.sum(mass))
-geom_start_pos = geom_start_pos*4
-geom_scales = geom_scales*4
+
+geom_start_pos = geom_start_pos
+geom_scales = geom_scales
+mass = mass
 
 draw_spring = np.array([0.0])
 
